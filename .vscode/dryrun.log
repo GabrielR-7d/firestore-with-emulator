@@ -1,0 +1,8 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/gabriel/Documents/repos/firestore-test'
+docker-compose run --rm  app && exit_status=$? || exit_status=$?
+[ "$exit_status" -ne 0 ] && docker-compose ps && docker-compose logs
+docker-compose down -v
+(exit $exit_status)
+make: Leaving directory '/home/gabriel/Documents/repos/firestore-test'
+ 

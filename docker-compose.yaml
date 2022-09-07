@@ -1,0 +1,39 @@
+version: '2.4'
+
+services:
+  firestore_emulator:
+    image: mtlynch/firestore-emulator
+    environment:
+      FIRESTORE_PROJECT_ID: local
+      PORT: 8200
+    ports:
+      - 8200:8200
+    stop_signal: SIGKILL
+
+  set-up:
+    image: node:16-alpine
+    volumes:
+      - ./set-up.js:/app/set-up.mjs:ro
+    working_dir: /app
+    stop_signal: SIGKILL
+    depends_on:
+      - firestore_emulator
+    environment:
+      - FIRESTORE_EMULATOR_HOST=firestore_emulator:8200
+      - FIRESTORE_PROJECT_ID=test
+    command: sh -c 'npm i @google-cloud/firestore && node set-up.mjs'
+
+  app:
+    image: node:16-alpine
+    volumes:
+      - ./src/index.js:/app/index.js:ro
+      - ./src/package.json:/app/package.json
+    working_dir: /app
+    stop_signal: SIGKILL
+    depends_on:
+      set-up:
+        condition: service_completed_successfully
+    environment:
+      - FIRESTORE_EMULATOR_HOST=firestore_emulator:8200
+      - FIRESTORE_PROJECT_ID=test
+    command: sh -c 'npm install && node index.js'
